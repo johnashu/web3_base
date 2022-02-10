@@ -1,10 +1,12 @@
 from web3 import Web3, exceptions
 from ethtoken.abi import EIP20_ABI
-from web3_base.includes.config import *
 import logging as log
 
-class OneTransfer:
-    def __init__(self, w3, key, chain_id=1666600000, abi=EIP20_ABI) -> None:
+
+class Web3Base:
+    def __init__(
+        self, w3: Web3, key: str, chain_id: int = 1666600000, abi: list = EIP20_ABI
+    ) -> None:
         self.w3 = w3
         self.key = key
         self.chain_id = chain_id
@@ -15,13 +17,15 @@ class OneTransfer:
     def is_connected(self):
         return self.w3.isConnected()
 
-    def balance(self, address):
+    def balance(self, address: str = ""):
+        if not address:
+            address = self.account
         return self.w3.fromWei(self.w3.eth.getBalance(address), "ether")
 
     def check_details(self):
-        log.info(self.is_connected())
-        log.info(self.account)
-        log.info(self.balance(self.account))
+        log.info(f"Connected?   ::  {self.is_connected()}")
+        log.info(f"Address      ::  {self.account}")
+        log.info(f"Balance      ::  {self.balance(self.account)}")
 
     def sign_transaction(self, data: dict):
         return self.w3.eth.account.sign_transaction(
@@ -69,7 +73,9 @@ class OneTransfer:
         gas_price: int,
     ):
         contract = self.w3.eth.contract(address=contract, abi=self.abi)
-        txn = contract.functions.transferFrom(self.account, send_address, send_amount).buildTransaction(
+        txn = contract.functions.transferFrom(
+            self.account, send_address, send_amount
+        ).buildTransaction(
             {
                 "gasPrice": gas_price,
                 "nonce": nonce,
@@ -78,7 +84,9 @@ class OneTransfer:
         )
         return txn
 
-    def tx_function(self, func: object, gas_price: int, func_args: tuple=(), value: int = 0) -> str:
+    def tx_function(
+        self, func: object, gas_price: int, func_args: tuple = (), value: int = 0
+    ) -> str:
 
         # Convert to Wei and get nonce
         nonce = self.w3.eth.getTransactionCount(self.account)
@@ -139,7 +147,7 @@ class OneTransfer:
 #     p_keyCreator = ""
 #     abi = get_abi(fn)
 #     w3 = Web3(Web3.WebsocketProvider(wss_url))
-#     tx = OneTransfer(w3, p_keyCreator, abi=abi)
+#     tx = Web3Base(w3, p_keyCreator, abi=abi)
 #     tx.check_details()
 
 #     steakwallet1 = "0x1Ef8CA159D1e3bA31Ff9f557B08D977fB60F2ac1"

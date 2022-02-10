@@ -1,6 +1,5 @@
 import logging
 import sys, os
-import json
 
 from web3_base.includes.config_utils import Envs, create_data_path
 
@@ -9,14 +8,14 @@ wss_url = "wss://ws.s0.t.hmny.io"
 main_net = "https://api.harmony.one"
 
 envs = Envs()
-print(envs)
+create_data_path("", data_path="logs")
+create_data_path("", data_path="data")
 
 ##############################################
 
 
 # LOGGING
-
-file_handler = logging.FileHandler(filename="data.log")
+file_handler = logging.FileHandler(filename=os.path.join("logs", "data.log"))
 stdout_handler = logging.StreamHandler(sys.stdout)
 handlers = [file_handler, stdout_handler]
 

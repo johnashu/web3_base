@@ -2,6 +2,7 @@ from web3 import Web3
 import sys, os
 import json
 
+
 def check_connections(w3: Web3) -> bool:
     is_connected = w3.isConnected()
 
@@ -14,6 +15,7 @@ def check_connections(w3: Web3) -> bool:
 def get_abi(fn: str) -> json:
     with open(fn) as j:
         return list(json.load(j))
+
 
 def readable_price(num, show_decimals=True, print_res=True):
     temp = []
@@ -43,4 +45,3 @@ def readable_price(num, show_decimals=True, print_res=True):
     if print_res:
         print(rtn_str)
     return rtn_str
-
