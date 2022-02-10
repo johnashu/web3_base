@@ -104,7 +104,7 @@ class Web3Base:
         signed_tx = self.w3.eth.account.signTransaction(tx, self.key)
         return signed_tx, value, nonce
 
-    def process_tx(self, signed_txn: list) -> list:
+    def process_tx(self, signed_txn: list, check_hash: bool = False) -> list:
         signed_txn, value, nonce = signed_txn
 
         try:
@@ -113,7 +113,8 @@ class Web3Base:
             sent, hash_info = self.wait_for_receipt(tx_hash)
             found = dict(hash_info)
             info = f"\n\nCheck Completed Tx for :: {tx_hash.hex()}\n\n"
-            self.check_tx_hash(found, info)
+            if check_hash:
+                self.check_tx_hash(found, info)
             log.info(f"SUCCESS! {tx_hash.hex()}  :: {value}  ::  {nonce}")
             return True, nonce
         except ValueError as e:
@@ -133,7 +134,7 @@ class Web3Base:
             try:
                 hash_info = self.w3.eth.getTransaction(t_hash)
                 sent = self.w3.eth.getTransactionReceipt(t_hash)
-                log.info(sent)
+                log.debug(sent)
                 return sent, hash_info
             except exceptions.TransactionNotFound:
                 pass
