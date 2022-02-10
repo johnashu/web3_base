@@ -17,12 +17,11 @@ def get_abi(fn: str) -> json:
         return list(json.load(j))
 
 
-def readable_price(num, show_decimals=True, print_res=True):
+def readable_price(num, d: int = 18, show_decimals=True, print_res=True):
     temp = []
     c = 1
-    d = 18
     try:
-        main, decimals = str(num / 10 ** d).split(".")
+        main, decimals = f'{num / 10 ** d:.{d}f}'.split(".")
     except ValueError:
         return float(num)
 
