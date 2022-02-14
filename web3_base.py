@@ -1,8 +1,6 @@
 from web3 import Web3, exceptions
 from ethtoken.abi import EIP20_ABI
 import logging as log
-
-
 class Web3Base:
     def __init__(
         self, w3: Web3, key: str, chain_id: int = 1666600000, abi: list = EIP20_ABI
@@ -101,7 +99,7 @@ class Web3Base:
                 "value": value,
             }
         )
-        signed_tx = self.w3.eth.account.signTransaction(tx, self.key)
+        signed_tx = self.sign_transaction(tx)
         return signed_tx, value, nonce
 
     def process_tx(self, signed_txn: list, check_hash: bool = False) -> list:
@@ -110,7 +108,7 @@ class Web3Base:
         try:
             tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
             log.info("Waiting for Tx... ")
-            sent, hash_info = self.wait_for_receipt(tx_hash)
+            _, hash_info = self.wait_for_receipt(tx_hash)
             found = dict(hash_info)
             info = f"\n\nCheck Completed Tx for :: {tx_hash.hex()}\n\n"
             if check_hash:
@@ -139,6 +137,8 @@ class Web3Base:
             except exceptions.TransactionNotFound:
                 pass
 
+            
+
 
 # if __name__ == "__main__":
 
@@ -151,11 +151,11 @@ class Web3Base:
 #     tx = Web3Base(w3, p_keyCreator, abi=abi)
 #     tx.check_details()
 
-#     steakwallet1 = "0x1Ef8CA159D1e3bA31Ff9f557B08D977fB60F2ac1"
+#     wallet = "0x1Ef8CA159D1e3bA31Ff9f557B08D977fB60F2ac1"
 #     value = tx.w3.toWei(200000000, "ether")
 #     gas_price = tx.w3.eth.gas_price
 #     print(gas_price)
 #     signed_txn = tx.build_transaction(
-#         0, gas_price, steakwallet1, value, contract=contract
+#         0, gas_price, wallet, value, contract=contract
 #     )
 #     tx.process_tx(signed_txn)
