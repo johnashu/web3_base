@@ -84,7 +84,7 @@ class Web3Base:
         )
         return txn
 
-    def tx_function(
+    def build_tx_with_function(
         self, func: object, gas_price: int, func_args: tuple = (), value: int = 0
     ) -> str:
 

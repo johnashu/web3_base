@@ -21,7 +21,7 @@ def readable_price(num, d: int = 18, show_decimals=True, print_res=True):
     temp = []
     c = 1
     try:
-        main, decimals = f'{num / 10 ** d:.{d}f}'.split(".")
+        main, decimals = f"{num / 10 ** d:.{d}f}".split(".")
     except ValueError:
         return float(num)
 
