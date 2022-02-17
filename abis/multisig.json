@@ -1,0 +1,56 @@
+[
+    {
+        "payable": false,
+        "constant": false,
+        "inputs": [
+           
+        ],
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "name": "nonce",
+        "outputs": [
+            {
+                "name": "nonce",
+                "type": "uint256",
+                "internalType": "uint256"
+            }
+        ]
+    },
+    {
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		
+		],
+		"name": "approvedHashes",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+    {
+        "payable": false,
+        "constant": false,
+        "inputs": [
+           {
+                "name": "hashToApprove",
+                "type": "bytes32",
+                "internalType": "bytes32"
+            }
+        ],
+        "type": "function",
+        "stateMutability": "nonpayable",
+        "name": "approveHash",
+        "outputs": [
+           
+        ]
+    }
+]

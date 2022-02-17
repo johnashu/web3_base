@@ -12,7 +12,7 @@ class Web3Base:
         self.account = w3.eth.default_account
         self.abi = abi
 
-    def is_connected(self):
+    def is_connected(self): 
         return self.w3.isConnected()
 
     def balance(self, address: str = ""):
@@ -31,6 +31,9 @@ class Web3Base:
             self.key,
         )
 
+    def get_nonce(self) -> int:
+        return self.w3.eth.getTransactionCount(self.account)
+
     def build_transaction(
         self,
         nonce: int,
@@ -42,7 +45,7 @@ class Web3Base:
     ) -> list:
 
         if not manual_nonce:
-            nonce = self.w3.eth.get_transaction_count(self.account)
+            nonce = self.get_nonce()
         log.info(f"gas  ::  {gasPrice} |  Nonce  ::  {nonce}  | Value :: {value}")
 
         tx_data = dict(
@@ -87,7 +90,7 @@ class Web3Base:
     ) -> str:
 
         # Convert to Wei and get nonce
-        nonce = self.w3.eth.getTransactionCount(self.account)
+        nonce = self.get_nonce()
 
         # Build transaction using the function and arguments prior
         tx = func(*func_args).buildTransaction(
@@ -102,11 +105,16 @@ class Web3Base:
         signed_tx = self.sign_transaction(tx)
         return signed_tx, value, nonce
 
-    def process_tx(self, signed_txn: list, check_hash: bool = False) -> list:
+    def process_tx(self, signed_txn: list, check_hash: bool = False, manual_raw: bool = False) -> list:
         signed_txn, value, nonce = signed_txn
+        
+        raw = signed_txn
+        if not manual_raw:
+            raw = signed_txn.rawTransaction
+            
 
         try:
-            tx_hash = self.w3.eth.send_raw_transaction(signed_txn.rawTransaction)
+            tx_hash = self.w3.eth.send_raw_transaction(raw)
             log.info("Waiting for Tx... ")
             _, hash_info = self.wait_for_receipt(tx_hash)
             found = dict(hash_info)

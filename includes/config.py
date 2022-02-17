@@ -5,7 +5,9 @@ from web3_base.includes.config_utils import Envs, create_data_path
 
 test_net = "https://api.s0.b.hmny.io/"
 wss_url = "wss://ws.s0.t.hmny.io"
-main_net = "https://api.harmony.one"
+# main_net = "https://api.harmony.one"
+main_net = "https://harmony-0-rpc.gateway.pokt.network"
+
 
 envs = Envs()
 create_data_path("", data_path="logs")
