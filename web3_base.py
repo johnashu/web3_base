@@ -1,10 +1,11 @@
-from audioop import add
-import requests
-import json
-from typing import Tuple
+import logging as log
+import requests, json
+from datetime import datetime as dt, timedelta as td
+from time import time
 from web3 import Web3, exceptions
 from ethtoken.abi import EIP20_ABI
-import logging as log
+
+
 class Web3Base:
     def __init__(
         self, w3: Web3, key: str, chain_id: int = 1666600000, abi: list = EIP20_ABI
@@ -15,6 +16,19 @@ class Web3Base:
         w3.eth.default_account = w3.eth.account.privateKeyToAccount(key).address
         self.account = w3.eth.default_account
         self.abi = abi
+
+    def is_connected(self) -> bool:
+        return self.w3.isConnected()
+
+    def balance(self, address: str = "") -> float:
+        if not address:
+            address = self.account
+        return self.w3.fromWei(self.w3.eth.getBalance(address), "ether")
+
+    def check_details(self) -> None:
+        log.info(f"Connected?   ::  {self.is_connected()}")
+        log.info(f"Address      ::  {self.account}")
+        log.info(f"Balance      ::  {self.balance(self.account)}")
 
     def get_abi_from_api(self, contract: str, add_to_object: bool = False) -> Tuple[bool, list]:
         """ Harmony ONE"""
@@ -35,20 +49,7 @@ class Web3Base:
         with open(fn) as j:
             json.dumps(abi, j, ensure_ascii=False)
 
-    def is_connected(self): 
-        return self.w3.isConnected()
-
-    def balance(self, address: str = ""):
-        if not address:
-            address = self.account
-        return self.w3.fromWei(self.w3.eth.getBalance(address), "ether")
-
-    def check_details(self):
-        log.info(f"Connected?   ::  {self.is_connected()}")
-        log.info(f"Address      ::  {self.account}")
-        log.info(f"Balance      ::  {self.balance(self.account)}")
-
-    def sign_transaction(self, data: dict):
+    def sign_transaction(self, data: dict) -> Web3:
         return self.w3.eth.account.sign_transaction(
             data,
             self.key,
@@ -65,7 +66,7 @@ class Web3Base:
         value: int,
         manual_nonce: bool = False,
         contract=False,
-    ) -> list:
+    ) -> tuple:
 
         if not manual_nonce:
             nonce = self.get_nonce()
@@ -95,7 +96,7 @@ class Web3Base:
         send_amount: int,
         nonce: int,
         gas_price: int,
-    ):
+    ) -> Web3:
         contract = self.w3.eth.contract(address=contract, abi=self.abi)
         txn = contract.functions.transferFrom(
             self.account, send_address, send_amount
@@ -110,7 +111,7 @@ class Web3Base:
 
     def build_tx_with_function(
         self, func: object, gas_price: int, func_args: tuple = (), value: int = 0
-    ) -> str:
+    ) -> tuple:
 
         # Convert to Wei and get nonce
         nonce = self.get_nonce()
@@ -128,53 +129,67 @@ class Web3Base:
         signed_tx = self.sign_transaction(tx)
         return signed_tx, value, nonce
 
-    def process_tx(self, signed_txn: list, check_hash: bool = False, manual_raw: bool = False) -> list:
+    def process_tx(
+        self,
+        signed_txn: list,
+        display_tx_hash: bool = False,
+        display_receipt: bool = False,
+        manual_raw: bool = False,
+    ) -> list:
         signed_txn, value, nonce = signed_txn
-        
+
         raw = signed_txn
         if not manual_raw:
             raw = signed_txn.rawTransaction
-            
 
         try:
             tx_hash = self.w3.eth.send_raw_transaction(raw)
             log.info("Waiting for Tx... ")
-            _, hash_info = self.wait_for_receipt(tx_hash)
-            found = dict(hash_info)
+            receipt, hash_info = self.wait_for_receipt(tx_hash)
             info = f"\n\nCheck Completed Tx for :: {tx_hash.hex()}\n\n"
-            if check_hash:
-                self.check_tx_hash(found, info)
+            if display_tx_hash:
+                self.check_tx_hash(hash_info, info)
+            if display_receipt:
+                self.check_tx_hash(receipt, info)
             log.info(f"SUCCESS! {tx_hash.hex()}  :: {value}  ::  {nonce}")
             return True, nonce
         except ValueError as e:
             log.error(e)
-        return False, nonce, None
+        return False, nonce
 
     def check_tx_hash(self, found: dict, info: str) -> None:
         log.info(info)
+        display = ""
         for k, v in found.items():
             try:
-                log.info(f"{k} : {v.hex()}")
+                display += f"\t{k} : {v.hex()}\n"
             except AttributeError:
-                log.info(f"{k} : {v}")
+                display += f"\t{k} : {v}\n"
+        log.info(f"\n{display}")
 
-    def wait_for_receipt(self, t_hash: str) -> tuple:
+    def wait_for_receipt(self, t_hash: str, timeout: int = 600) -> tuple:
+        to = dt.now() + td(seconds=timeout)
         while 1:
+            now = dt.now()
+            if now > to:
+                err = f"Waiting for receipt timed out after [ {timeout} ] seconds..."
+                log.error(err)
+                break
             try:
                 hash_info = self.w3.eth.getTransaction(t_hash)
-                sent = self.w3.eth.getTransactionReceipt(t_hash)
-                log.debug(sent)
-                return sent, hash_info
+                receipt = self.w3.eth.getTransactionReceipt(t_hash)
+                log.debug(receipt)
+                return dict(receipt), dict(hash_info)
             except exceptions.TransactionNotFound:
                 pass
 
-            
+        return {"error": err}, {"error": err}
 
 
 # if __name__ == "__main__":
 
-#     contract = "0x6058c4ac419fa0D76c9dDc65ec765da8E9238518"
-#     fn = os.path.join("abis", "steak.json")
+#     contract = ""
+#     fn = os.path.join("abis", "ERC20.json")
 
 #     p_keyCreator = ""
 #     abi = get_abi(fn)
@@ -182,7 +197,7 @@ class Web3Base:
 #     tx = Web3Base(w3, p_keyCreator, abi=abi)
 #     tx.check_details()
 
-#     wallet = "0x1Ef8CA159D1e3bA31Ff9f557B08D977fB60F2ac1"
+#     wallet = ""
 #     value = tx.w3.toWei(200000000, "ether")
 #     gas_price = tx.w3.eth.gas_price
 #     print(gas_price)
