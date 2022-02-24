@@ -1,5 +1,6 @@
 import logging as log
 import requests, json
+from typing import Tuple
 from datetime import datetime as dt, timedelta as td
 from time import time
 from web3 import Web3, exceptions
@@ -30,24 +31,29 @@ class Web3Base:
         log.info(f"Address      ::  {self.account}")
         log.info(f"Balance      ::  {self.balance(self.account)}")
 
-    def get_abi_from_api(self, contract: str, add_to_object: bool = False) -> Tuple[bool, list]:
-        """ Harmony ONE"""
+    def get_abi_from_api(
+        self, contract: str, add_to_object: bool = False
+    ) -> Tuple[bool, list]:
+        """Harmony ONE"""
 
         api = "https://ctrver.t.hmny.io/fetchContractCode"
         params = {"contractAddress": contract}
 
-        res = requests.get(api, json=params)
+        res = requests.get(api, params=params)
         if res.status_code == 200:
-            abi = res.json()['abi']
+            abi = res.json()["abi"]
             if add_to_object:
                 self.abi = abi
             return True, abi
         return False, [{"Error": res}]
 
     def save_abi_from_api(self, fn: str, contract: str) -> None:
-        abi = self.get_abi_from_api(contract)
-        with open(fn) as j:
-            json.dumps(abi, j, ensure_ascii=False)
+        res, abi = self.get_abi_from_api(contract)
+        if res:
+            with open(fn, "w") as j:
+                json.dump(abi, j, ensure_ascii=False, indent=4)
+        else:
+            log.error(f"Cannot find contract ABI  ::  {abi}")
 
     def sign_transaction(self, data: dict) -> Web3:
         return self.w3.eth.account.sign_transaction(
