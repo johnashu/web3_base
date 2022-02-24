@@ -1,3 +1,7 @@
+from audioop import add
+import requests
+import json
+from typing import Tuple
 from web3 import Web3, exceptions
 from ethtoken.abi import EIP20_ABI
 import logging as log
@@ -11,6 +15,25 @@ class Web3Base:
         w3.eth.default_account = w3.eth.account.privateKeyToAccount(key).address
         self.account = w3.eth.default_account
         self.abi = abi
+
+    def get_abi_from_api(self, contract: str, add_to_object: bool = False) -> Tuple[bool, list]:
+        """ Harmony ONE"""
+
+        api = "https://ctrver.t.hmny.io/fetchContractCode"
+        params = {"contractAddress": contract}
+
+        res = requests.get(api, json=params)
+        if res.status_code == 200:
+            abi = res.json()['abi']
+            if add_to_object:
+                self.abi = abi
+            return True, abi
+        return False, [{"Error": res}]
+
+    def save_abi_from_api(self, fn: str, contract: str) -> None:
+        abi = self.get_abi_from_api(contract)
+        with open(fn) as j:
+            json.dumps(abi, j, ensure_ascii=False)
 
     def is_connected(self): 
         return self.w3.isConnected()
