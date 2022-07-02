@@ -9,7 +9,7 @@ from ethtoken.abi import EIP20_ABI
 
 class Web3Base:
     def __init__(
-        self, w3: Web3, key: str, chain_id: int = 1666600000, abi: list = EIP20_ABI
+        self, w3: Web3, key: str, chain_id: int = 1666600000, abi: list = EIP20_ABI, abi_from_api: bool = False
     ) -> None:
         self.w3 = w3
         self.key = key
@@ -45,7 +45,7 @@ class Web3Base:
             if add_to_object:
                 self.abi = abi
             return True, abi
-        return False, [{"Error": res}]
+        return False, [{"Error": res.text}]
 
     def save_abi_from_api(self, fn: str, contract: str) -> None:
         res, abi = self.get_abi_from_api(contract)
