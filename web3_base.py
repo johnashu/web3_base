@@ -9,7 +9,12 @@ from ethtoken.abi import EIP20_ABI
 
 class Web3Base:
     def __init__(
-        self, w3: Web3, key: str, chain_id: int = 1666600000, abi: list = EIP20_ABI, abi_from_api: bool = False
+        self,
+        w3: Web3,
+        key: str,
+        chain_id: int = 1666600000,
+        abi: list = EIP20_ABI,
+        abi_from_api: bool = False,
     ) -> None:
         self.w3 = w3
         self.key = key
@@ -116,11 +121,20 @@ class Web3Base:
         return txn
 
     def build_tx_with_function(
-        self, func: object, gas_price: int, func_args: tuple = (), value: int = 0
+        self,
+        func: object,
+        gas_price: int,
+        func_args: tuple = (),
+        value: int = 0,
+        nonce: int = 0,
+        manual_nonce=False,
     ) -> tuple:
 
+        gas = 30000000
+
         # Convert to Wei and get nonce
-        nonce = self.get_nonce()
+        if not manual_nonce:
+            nonce = self.get_nonce()
 
         # Build transaction using the function and arguments prior
         tx = func(*func_args).buildTransaction(
@@ -129,6 +143,7 @@ class Web3Base:
                 "nonce": nonce,
                 "chainId": self.chain_id,
                 "gasPrice": gas_price,
+                "gas": gas,
                 "value": value,
             }
         )
@@ -141,6 +156,8 @@ class Web3Base:
         display_tx_hash: bool = False,
         display_receipt: bool = False,
         manual_raw: bool = False,
+        show_logs: bool = True,
+        no_check: bool = False,
     ) -> list:
         signed_txn, value, nonce = signed_txn
 
@@ -150,14 +167,18 @@ class Web3Base:
 
         try:
             tx_hash = self.w3.eth.send_raw_transaction(raw)
-            log.info("Waiting for Tx... ")
+            if no_check:
+                return True, nonce
+            if show_logs:
+                log.info("Waiting for Tx... ")
             receipt, hash_info = self.wait_for_receipt(tx_hash)
             info = f"\n\nCheck Completed Tx for :: {tx_hash.hex()}\n\n"
             if display_tx_hash:
                 self.check_tx_hash(hash_info, info)
             if display_receipt:
                 self.check_tx_hash(receipt, info)
-            log.info(f"SUCCESS! {tx_hash.hex()}  :: {value}  ::  {nonce}")
+            if show_logs:
+                log.info(f"SUCCESS! {tx_hash.hex()}  :: {value}  ::  {nonce}")
             return True, nonce
         except ValueError as e:
             log.error(e)
