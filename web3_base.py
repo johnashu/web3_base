@@ -15,6 +15,7 @@ class Web3Base:
         chain_id: int = 1666600000,
         abi: list = EIP20_ABI,
         abi_from_api: bool = False,
+        gas = 30000000
     ) -> None:
         self.w3 = w3
         self.key = key
@@ -22,6 +23,7 @@ class Web3Base:
         w3.eth.default_account = w3.eth.account.privateKeyToAccount(key).address
         self.account = w3.eth.default_account
         self.abi = abi
+        self.gas = gas
 
     def is_connected(self) -> bool:
         return self.w3.isConnected()
@@ -130,8 +132,6 @@ class Web3Base:
         manual_nonce=False,
     ) -> tuple:
 
-        gas = 30000000
-
         # Convert to Wei and get nonce
         if not manual_nonce:
             nonce = self.get_nonce()
@@ -143,7 +143,7 @@ class Web3Base:
                 "nonce": nonce,
                 "chainId": self.chain_id,
                 "gasPrice": gas_price,
-                "gas": gas,
+                "gas": self.gas,
                 "value": value,
             }
         )
