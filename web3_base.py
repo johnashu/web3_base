@@ -15,7 +15,7 @@ class Web3Base:
         chain_id: int = 1666600000,
         abi: list = EIP20_ABI,
         abi_from_api: bool = False,
-        gas = 30000000
+        gas=30000000,
     ) -> None:
         self.w3 = w3
         self.key = key
@@ -89,6 +89,7 @@ class Web3Base:
             chainId=self.chain_id,
             nonce=nonce,
             gasPrice=gasPrice,
+            gas=self.gas,
             to=address_to,
             value=value,
         )
@@ -116,6 +117,7 @@ class Web3Base:
         ).buildTransaction(
             {
                 "gasPrice": gas_price,
+                "gas": self.gas,
                 "nonce": nonce,
                 "chainId": self.chain_id,
             }
