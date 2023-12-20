@@ -6,13 +6,14 @@ from time import time
 from web3 import Web3, exceptions
 from ethtoken.abi import EIP20_ABI
 
+from includes.config import *
 
 class Web3Base:
     def __init__(
         self,
         w3: Web3,
         key: str,
-        chain_id: int = 1666600000,
+        chain_id: int = 1,
         abi: list = EIP20_ABI,
         abi_from_api: bool = False,
         gas=30000000,
@@ -20,10 +21,14 @@ class Web3Base:
         self.w3 = w3
         self.key = key
         self.chain_id = chain_id
-        w3.eth.default_account = w3.eth.account.privateKeyToAccount(key).address
-        self.account = w3.eth.default_account
         self.abi = abi
         self.gas = gas
+        if w3:
+            self.set_web3(w3, key)
+
+    def set_web3(self, w3: Web3, key: str) -> None:
+            w3.eth.default_account = w3.eth.account.privateKeyToAccount(key).address
+            self.account = w3.eth.default_account
 
     def is_connected(self) -> bool:
         return self.w3.isConnected()
@@ -215,22 +220,35 @@ class Web3Base:
         return {"error": err}, {"error": err}
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
 
-#     contract = ""
-#     fn = os.path.join("abis", "ERC20.json")
+    contract = "0x33333333333371718A3C2bB63E5F3b94C9bC13bE"
+    abi = os.path.join("abis", "ERC721.json")
 
-#     p_keyCreator = ""
-#     abi = get_abi(fn)
-#     w3 = Web3(Web3.WebsocketProvider(wss_url))
-#     tx = Web3Base(w3, p_keyCreator, abi=abi)
-#     tx.check_details()
+    PK = envs.PK
+    print(PK)
+    # abi = get_abi(fn)
+    # w3 = Web3(Web3.WebsocketProvider(wss_url))
+    w3 = Web3(Web3.HTTPProvider(main_net))
+    tx = Web3Base(w3, PK, abi=abi)
+    tx.check_details()
 
-#     wallet = ""
-#     value = tx.w3.toWei(200000000, "ether")
-#     gas_price = tx.w3.eth.gas_price
-#     print(gas_price)
-#     signed_txn = tx.build_transaction(
-#         0, gas_price, wallet, value, contract=contract
-#     )
-#     tx.process_tx(signed_txn)
+    WALLET = envs.WALLET
+    # value = tx.w3.toWei(200000000, "ether")
+    # gas_price = tx.w3.eth.gas_price
+    # print(gas_price)
+    # signed_txn = tx.build_transaction(
+    #     0, gas_price, WALLET, value, contract=contract
+    # )
+    # tx.process_tx(signed_txn)
+
+    # signed_tx = tx.build_hrc20_transfer(
+    #     contract,
+    #     WALLET,
+    #     "195",
+    #     tx.get_nonce(),
+    #     tx.w3.eth.gas_price
+
+    # )
+
+    # tx.process_tx(signed_tx)
